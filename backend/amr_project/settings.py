@@ -4,7 +4,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "dev-only-not-secret"
 DEBUG = True
-ALLOWED_HOSTS = ["*",'127.0.0.1','localhost']
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "*", ".onrender.com"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -65,8 +65,9 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # --- DRF / Auth ---
 REST_FRAMEWORK = {
@@ -78,39 +79,25 @@ REST_FRAMEWORK = {
     ],
 }
 
-# --- CORS/CSRF for Vite on 5173 ---
+# --- CORS/CSRF ---
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5175",
+    "http://127.0.0.1:5175",
 ]
+CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
 
-# added by setup
-CORS_ALLOWED_ORIGINS += ["http://localhost:5175"]
-
-# added by setup
-CORS_ALLOWED_ORIGINS += ["http://127.0.0.1:5175"]
-
-CORS_ALLOW_CREDENTIALS = True
-# === AMR CORS OVERRIDE (auto-appended) ===
-try:
-    from .local_settings import *  # noqa
-except Exception:
-    pass
-# === END AMR CORS OVERRIDE ===
-
-# === AUTO IMPORT LOCAL SETTINGS (AMR) ===
-try:
-    from .local_settings import *  # noqa
-except Exception:
-    pass
-# === END AUTO IMPORT LOCAL SETTINGS (AMR) ===
-
-# --- load local overrides (admin, cors, etc.) ---
+# --- load local overrides ---
 try:
     from .local_settings import *
 except Exception:
     pass
+
+# --- Upload limits ---
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
