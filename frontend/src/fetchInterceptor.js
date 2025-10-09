@@ -1,60 +1,34 @@
-// Comprehensive fetch interceptor to fix ALL API URLs
-console.log('🔧 Fetch interceptor loaded');
+// ULTIMATE API FIXER
+console.log('🎯 API Interceptor Loaded');
 
 const originalFetch = window.fetch;
 window.fetch = function(url, options) {
+  const baseUrl = import.meta.env.VITE_API_URL || 'https://amrthabo.onrender.com';
   let finalUrl = url;
   
   if (typeof url === 'string') {
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://amrthabo.onrender.com';
-    
-    // Fix patterns: /api/..., api/..., fetch("/api/..."), fetch('/api/...')
     if (url.startsWith('/api/')) {
       finalUrl = baseUrl + url;
-      console.log('🔧 Fixed API URL:', finalUrl);
+      console.log('🎯 Fixed API URL:', url, '→', finalUrl);
     } else if (url.startsWith('api/')) {
       finalUrl = baseUrl + '/' + url;
-      console.log('🔧 Fixed API URL:', finalUrl);
+      console.log('🎯 Fixed API URL:', url, '→', finalUrl);
     }
   }
   
   return originalFetch(finalUrl, options);
 };
 
-// Also intercept axios if used
-if (typeof window.axios !== 'undefined') {
-  console.log('🔧 Axios interceptor loaded');
-  const originalAxiosRequest = window.axios.request;
-  window.axios.request = function(config) {
-    if (config.url) {
-      const baseUrl = import.meta.env.VITE_API_URL || 'https://amrthabo.onrender.com';
-      
-      if (config.url.startsWith('/api/')) {
-        config.url = baseUrl + config.url;
-        console.log('🔧 Fixed Axios URL:', config.url);
-      } else if (config.url.startsWith('api/')) {
-        config.url = baseUrl + '/' + config.url;
-        console.log('🔧 Fixed Axios URL:', config.url);
-      }
-    }
-    return originalAxiosRequest(config);
-  };
-}
-
-// Override XMLHttpRequest if needed
+// Also fix XMLHttpRequest for other libraries
 const originalXHROpen = XMLHttpRequest.prototype.open;
 XMLHttpRequest.prototype.open = function(method, url, ...args) {
+  const baseUrl = import.meta.env.VITE_API_URL || 'https://amrthabo.onrender.com';
   let finalUrl = url;
   
   if (typeof url === 'string') {
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://amrthabo.onrender.com';
-    
     if (url.startsWith('/api/')) {
       finalUrl = baseUrl + url;
-      console.log('🔧 Fixed XHR URL:', finalUrl);
-    } else if (url.startsWith('api/')) {
-      finalUrl = baseUrl + '/' + url;
-      console.log('🔧 Fixed XHR URL:', finalUrl);
+      console.log('🎯 Fixed XHR URL:', url, '→', finalUrl);
     }
   }
   
