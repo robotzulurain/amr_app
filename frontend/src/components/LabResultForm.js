@@ -11,12 +11,12 @@ export default function LabResultForm() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    axios.get('/api/laboratories/').then(res => setLabs(res.data));
+    axios.get(`${import.meta.env.VITE_API_URL}/api/laboratories/`).then(res => setLabs(res.data));
   }, []);
 
   const handleSubmit = async () => {
     try {
-      await axios.post('/api/labresults/', {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/labresults/`, {
         lab: labId,
         specimen, organism, antibiotic, result,
       });

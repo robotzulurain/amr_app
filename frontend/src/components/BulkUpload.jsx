@@ -14,7 +14,7 @@ export default function BulkUpload() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/upload/csv", { method: "POST", body: fd });
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/upload/csv`, { method: "POST", body: fd });
       let data = null;
       try { data = await res.json(); } catch { /* ignore */ }
 

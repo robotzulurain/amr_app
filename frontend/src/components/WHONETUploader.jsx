@@ -172,7 +172,7 @@ export default function WHONETUploader() {
       const fd = new FormData();
       fd.append("file", blob, (f.name || "upload") + ".converted.csv");
 
-      const res = await fetch("/api/upload/csv", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/upload/csv`, {
         method: "POST",
         body: fd
       });
