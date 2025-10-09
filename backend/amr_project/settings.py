@@ -119,3 +119,7 @@ except Exception:
 # ~10 MB in-memory parse; larger files will be streamed (tweak as needed)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
+# CORS settings for production
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
