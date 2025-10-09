@@ -204,3 +204,11 @@ CORS_ALLOWED_ORIGINS = [
 
 # Temporary - allow all origins for testing
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Allow Vercel domain
+CORS_ALLOWED_ORIGINS = [
+    "https://amr-app-umber.vercel.app",
+    "https://amrthabo.onrender.com",
+    "http://localhost:5173",
+]
+CORS_ALLOW_ALL_ORIGINS = True
