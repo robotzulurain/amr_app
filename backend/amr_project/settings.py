@@ -186,3 +186,10 @@ MIDDLEWARE = [
 
 # Update ALLOWED_HOSTS for production
 ALLOWED_HOSTS = ['amrthabo.onrender.com', 'localhost', '127.0.0.1', '.onrender.com']
+
+# Add Vercel domain to CORS
+CORS_ALLOWED_ORIGINS = [
+    "https://your-app-name.vercel.app",
+    "https://amrthabo.onrender.com",
+    "http://localhost:5173",
+]
