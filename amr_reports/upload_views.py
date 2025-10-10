@@ -1,91 +1,35 @@
-from rest_framework.views import APIView
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from rest_framework import status, permissions
-from .permissions import IsViewerReadOnlyElseDataEntryOrAdmin
-from io import TextIOWrapper
 import csv
-from datetime import datetime
-from .serializers import LabResultSerializer
 
-REQUIRED_FIELDS = ["patient_id","sex","age","specimen_type","organism","antibiotic","ast_result","test_date"]
-OPTIONAL_FIELDS = ["host_type","facility"]  # new
+from .models import LabResult
 
-def _norm_header(h):
-    return h.strip().lower().replace(" ", "_").replace("-", "_")
+@api_view(['POST'])
+@parser_classes([MultiPartParser])
+def upload_csv(request):
+    file = request.FILES.get('file')
+    if not file:
+        return Response({"error": "No file uploaded"}, status=400)
 
-def _parse_date(value):
-    if not value: return None
-    v = str(value).strip()
-    for fmt in ("%Y-%m-%d","%d/%m/%Y","%d-%m-%Y"):
-        try:
-            return datetime.strptime(v, fmt).date().isoformat()
-        except ValueError:
-            continue
-    return None
+    decoded = file.read().decode('utf-8').splitlines()
+    reader = csv.DictReader(decoded)
 
-def _norm_sex(v):
-    if not v: return None
-    v = str(v).strip().lower()
-    if v in ("m","male"): return "M"
-    if v in ("f","female"): return "F"
-    return v.upper()
+    created = 0
+    for row in reader:
+        LabResult.objects.create(
+            patient_id=row.get("patient_id"),
+            sex=row.get("sex"),
+            age=row.get("age"),
+            specimen_type=row.get("specimen_type"),
+            organism=row.get("organism"),
+            antibiotic=row.get("antibiotic"),
+            ast_result=row.get("ast_result"),
+            test_date=row.get("test_date"),
+            facility=row.get("facility"),
+            host_type=row.get("host_type"),
+            patient_type=row.get("patient_type", "UNKNOWN"),
+        )
+        created += 1
 
-def _norm_ast(v):
-    if not v: return None
-    v = str(v).strip().upper()
-    return {"SUSCEPTIBLE":"S","INTERMEDIATE":"I","RESISTANT":"R"}.get(v, v)
-
-class UploadCSVView(APIView):
-    permission_classes = [IsViewerReadOnlyElseDataEntryOrAdmin]
-
-    def post(self, request, *args, **kwargs):
-        f = request.FILES.get('file')
-        if not f:
-            return Response({"saved":0,"errors":["No file provided."]}, status=status.HTTP_400_BAD_REQUEST)
-
-        decoded = TextIOWrapper(f.file, encoding='utf-8', errors='replace')
-        reader = csv.reader(decoded)
-
-        try:
-            raw_headers = next(reader)
-        except StopIteration:
-            return Response({"saved":0,"errors":["Empty CSV file."]}, status=status.HTTP_400_BAD_REQUEST)
-
-        headers = [_norm_header(h) for h in raw_headers]
-        header_index = {h:i for i,h in enumerate(headers)}
-
-        missing = [c for c in REQUIRED_FIELDS if c not in header_index]
-        if missing:
-            return Response({"saved":0,"errors":[f"Missing column(s): {', '.join(missing)}"]}, status=status.HTTP_400_BAD_REQUEST)
-
-        saved, errors, rown = 0, [], 1
-        for raw in reader:
-            rown += 1
-            row = {}
-            for c in REQUIRED_FIELDS + OPTIONAL_FIELDS:
-                if c in header_index and header_index[c] < len(raw):
-                    row[c] = (raw[header_index[c]] or "").strip()
-
-            # normalize common fields
-            row["sex"] = _norm_sex(row.get("sex"))
-            row["ast_result"] = _norm_ast(row.get("ast_result"))
-            row["test_date"] = _parse_date(row.get("test_date"))
-
-            # host_type normalization
-            ht = (row.get("host_type") or "").strip().lower()
-            if ht in ("human","animal","environment"):
-                row["host_type"] = ht
-            elif ht == "":
-                row.pop("host_type", None)
-            else:
-                row["host_type"] = "human"
-
-            ser = LabResultSerializer(data=row)
-            if ser.is_valid():
-                ser.save()
-                saved += 1
-            else:
-                compact = "; ".join(f"{k}: {', '.join(map(str, v))}" for k,v in ser.errors.items())
-                errors.append(f"Row {rown} — {compact}")
-
-        return Response({"saved":saved,"errors":errors}, status=status.HTTP_200_OK)
+    return Response({"message": f"Uploaded {created} rows"})
