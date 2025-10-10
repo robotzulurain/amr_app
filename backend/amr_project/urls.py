@@ -45,3 +45,10 @@ urlpatterns = [
     # alerts placeholder
     path('api/alerts', AlertsView.as_view()),
 ]
+
+# Debug routes
+from amr_api.persistence_views import check_persistence
+
+urlpatterns += [
+    path('api/debug/persistence', check_persistence, name='debug-persistence'),
+]
