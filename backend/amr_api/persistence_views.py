@@ -7,16 +7,35 @@ import datetime
 def check_persistence(request):
     """Check if database is persisting data"""
     try:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT current_database(), now()")
-            db_info = cursor.fetchone()
+        engine = connection.settings_dict['ENGINE']
+        
+        if 'sqlite' in engine:
+            db_type = 'SQLite'
+            persistent = False
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT datetime('now')")
+                db_info = cursor.fetchone()
+            db_name = 'SQLite (file-based)'
+        elif 'postgres' in engine:
+            db_type = 'PostgreSQL'
+            persistent = True
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT current_database(), now()")
+                db_info = cursor.fetchone()
+            db_name = db_info[0]
+        else:
+            db_type = 'Unknown'
+            persistent = False
+            db_name = 'Unknown'
+            db_info = [datetime.datetime.now()]
         
         return Response({
-            'database_name': db_info[0],
-            'server_time': db_info[1],
-            'database_type': 'PostgreSQL' if 'postgres' in db_info[0] else 'SQLite',
-            'persistent': 'postgres' in db_info[0].lower(),
-            'status': 'OK'
+            'database_name': db_name,
+            'server_time': db_info[0],
+            'database_type': db_type,
+            'persistent': persistent,
+            'status': 'OK',
+            'engine': engine
         })
     except Exception as e:
         return Response({
